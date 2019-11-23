@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include <TFT_eSPI.h>
+#include <TFT_eSPI.h> 
 #include <SPI.h>
 #include "WiFi.h"
 #include <Wire.h>
@@ -16,13 +16,6 @@
 #define TFT_SLPIN   0x10
 #endif
 
-#define TFT_MOSI            19
-#define TFT_SCLK            18
-#define TFT_CS              5
-#define TFT_DC              16
-#define TFT_RST             23
-
-#define TFT_BL          4  // Display backlight control pin
 #define ADC_EN          14
 #define ADC_PIN         34
 #define BUTTON_1        35
@@ -69,6 +62,14 @@ void wifi_scan()
     WiFi.mode(WIFI_OFF);
 }
 
+//! Long time delay, it is recommended to use shallow sleep, which can effectively reduce the current consumption
+void espDelay(int ms)
+{   
+    esp_sleep_enable_timer_wakeup(ms * 1000);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH,ESP_PD_OPTION_ON);
+    esp_light_sleep_start();
+}
+
 void showVoltage()
 {
     static uint64_t timeStamp = 0;
@@ -93,7 +94,7 @@ void button_init()
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
         tft.setTextDatum(MC_DATUM);
         tft.drawString("Press again to wake up",  tft.width() / 2, tft.height() / 2 );
-        delay(6000);
+        espDelay(6000);
         digitalWrite(TFT_BL, !r);
 
         tft.writecommand(TFT_DISPOFF);
@@ -124,8 +125,6 @@ void button_loop()
 void setup()
 {
     Serial.begin(115200);
-    delay(1000);
-
     Serial.println("Start");
     tft.init();
     tft.setRotation(1);
@@ -136,23 +135,24 @@ void setup()
     tft.setTextDatum(MC_DATUM);
     tft.setTextSize(1);
 
-    if (TFT_BL > 0) {
-        pinMode(TFT_BL, OUTPUT);
-        digitalWrite(TFT_BL, HIGH);
+    if (TFT_BL > 0) { // TFT_BL has been set in the TFT_eSPI library in the User Setup file TTGO_T_Display.h
+         pinMode(TFT_BL, OUTPUT); // Set backlight pin to output mode
+         digitalWrite(TFT_BL, TFT_BACKLIGHT_ON); // Turn backlight on. TFT_BACKLIGHT_ON has been set in the TFT_eSPI library in the User Setup file TTGO_T_Display.h
     }
+
     tft.setSwapBytes(true);
     tft.pushImage(0, 0,  240, 135, ttgo);
-    delay(5000);
+    espDelay(5000);
 
     tft.setRotation(0);
     int i = 5;
     while (i--) {
         tft.fillScreen(TFT_RED);
-        delay(1000);
+        espDelay(1000);
         tft.fillScreen(TFT_BLUE);
-        delay(1000);
+        espDelay(1000);
         tft.fillScreen(TFT_GREEN);
-        delay(1000);
+        espDelay(1000);
     }
 
     button_init();
