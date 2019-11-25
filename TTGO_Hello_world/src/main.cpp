@@ -35,7 +35,6 @@ void setup()
     Serial.begin(115200);
     Serial.println("Start");
     tft.init();
-    //tft.setTextFont(4)
     tft.fontHeight(2);
     tft.setRotation(1);
     tft.fillScreen(TFT_BLACK);
